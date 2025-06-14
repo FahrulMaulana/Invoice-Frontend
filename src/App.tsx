@@ -6,6 +6,8 @@ import {
   ErrorComponent,
   RefineSnackbarProvider,
   ThemedLayoutV2,
+  ThemedSiderV2,
+  ThemedTitleV2,
   useNotificationProvider,
 } from "@refinedev/mui";
 
@@ -20,7 +22,7 @@ import routerBindings, {
 import dataProvider from "@refinedev/simple-rest";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
 import { authProvider, axiosInstance } from "./authProvider";
-import { Header } from "./components/header";
+import { Header, ModernLayout } from "./components";
 import { ColorModeContextProvider } from "./contexts/color-mode";
 import {
   ClientCreate,
@@ -48,6 +50,7 @@ import { ForgotPassword } from "./pages/forgotPassword";
 import { Login } from "./pages/login";
 import { Register } from "./pages/register";
 import { InvoiceCreate, InvoiceEdit, InvoiceList, InvoiceShow } from "./pages/invoices";
+
 // Buat dataProvider yang menggunakan axiosInstance yang sudah dikonfigurasi
 const customDataProvider = dataProvider("/api", axiosInstance);
 
@@ -57,7 +60,10 @@ function App() {
       <RefineKbarProvider>
         <ColorModeContextProvider>
           <CssBaseline />
-          <GlobalStyles styles={{ html: { WebkitFontSmoothing: "auto" } }} />
+          <GlobalStyles styles={{ 
+            html: { WebkitFontSmoothing: "auto" },
+            body: { fontFamily: "'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif" }
+          }} />
           <RefineSnackbarProvider>
             <DevtoolsProvider>
               <Refine
@@ -74,6 +80,7 @@ function App() {
                     show: "/clients/show/:id",
                     meta: {
                       canDelete: true,
+                      icon: <i className="material-icons">people</i>,
                     },
                   },
                   {
@@ -84,6 +91,7 @@ function App() {
                     show: "/company/show/:id",
                     meta: {
                       canDelete: true,
+                      icon: <i className="material-icons">business</i>,
                     },
                   },
                   {
@@ -94,6 +102,7 @@ function App() {
                     show: "/products/show/:id",
                     meta: {
                       canDelete: true,
+                      icon: <i className="material-icons">inventory</i>,
                     },
                   },
                   {
@@ -104,6 +113,7 @@ function App() {
                     show: "/payment-methods/show/:id",
                     meta: {
                       canDelete: true,
+                      icon: <i className="material-icons">payment</i>,
                     },
                   },
                   {
@@ -114,6 +124,7 @@ function App() {
                     show: "/invoice/show/:id",
                     meta: {
                       canDelete: true,
+                      icon: <i className="material-icons">payments</i>,
                     },
                   },
                 ]}
@@ -130,15 +141,28 @@ function App() {
                         key="authenticated-inner"
                         fallback={<CatchAllNavigate to="/login" />}
                       >
-                        <ThemedLayoutV2 Header={Header}>
-                          <Outlet />
-                        </ThemedLayoutV2>
+                      <ThemedLayoutV2
+                        Header={() => <Header />}
+                        Sider={(props) => (
+                          <ThemedSiderV2
+                            Title={({ collapsed }) => (
+                              <ThemedTitleV2
+                                collapsed={collapsed}
+                                text="Invoice Manager"
+                                // icon={<img src="/pngwing.png" width="24" height="24" alt="Logo" />}
+                              />
+                            )}
+                          />
+                        )}
+                      >
+                        <Outlet />
+                      </ThemedLayoutV2>
                       </Authenticated>
                     }
                   >
                     <Route
                       index
-                      element={<NavigateToResource resource="blog_posts" />}
+                      element={<NavigateToResource resource="invoice" />}
                     />
                     <Route path="/clients">
                       <Route index element={<ClientList />} />
@@ -195,7 +219,6 @@ function App() {
                 <UnsavedChangesNotifier />
                 <DocumentTitleHandler />
               </Refine>
-              <DevtoolsPanel />
             </DevtoolsProvider>
           </RefineSnackbarProvider>
         </ColorModeContextProvider>

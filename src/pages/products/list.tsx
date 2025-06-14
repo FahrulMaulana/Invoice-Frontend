@@ -1,12 +1,19 @@
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
-import {
-  DeleteButton,
-  EditButton,
-  List,
-  ShowButton,
-  useDataGrid,
-} from "@refinedev/mui";
+import { List, useDataGrid } from "@refinedev/mui";
 import React from "react";
+import {
+  IconButton,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+} from "@mui/material";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import EditIcon from "@mui/icons-material/Edit";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { useNavigate } from "react-router-dom";
+import { useDelete } from "@refinedev/core";
 
 // Define a type for the row data
 interface ProductRowData {
@@ -25,7 +32,47 @@ interface ValueFormatterParams {
 }
 
 export const ProductList = () => {
-  const { dataGridProps } = useDataGrid({});
+  const { dataGridProps } = useDataGrid<ProductRowData>({});
+  const navigate = useNavigate();
+  const { mutate: deleteProduct } = useDelete();
+  
+  // For the dropdown menu
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [actionRow, setActionRow] = React.useState<ProductRowData | null>(null);
+  const open = Boolean(anchorEl);
+  
+  const handleMenuClick = (event: React.MouseEvent<HTMLButtonElement>, row: ProductRowData) => {
+    setAnchorEl(event.currentTarget);
+    setActionRow(row);
+  };
+  
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+  
+  const handleEdit = () => {
+    if (actionRow?.id) {
+      navigate(`/products/edit/${actionRow.id}`);
+      handleMenuClose();
+    }
+  };
+  
+  const handleShow = () => {
+    if (actionRow?.id) {
+      navigate(`/products/show/${actionRow.id}`);
+      handleMenuClose();
+    }
+  };
+  
+  const handleDelete = () => {
+    if (actionRow?.id) {
+      deleteProduct({
+        resource: "products",
+        id: actionRow.id,
+      });
+      handleMenuClose();
+    }
+  };
 
   // Define getRowId function to handle rows without id property
   const getRowId = (row: ProductRowData) => {
@@ -72,22 +119,26 @@ export const ProductList = () => {
       {
         field: "actions",
         headerName: "Actions",
-        align: "right",
-        headerAlign: "right",
+        align: "center",
+        headerAlign: "center",
         minWidth: 120,
         sortable: false,
-        display: "flex",
         renderCell: function render({ row }) {
           return (
-            <>
-              <EditButton hideText recordItemId={row.id} />
-              <ShowButton hideText recordItemId={row.id} />
-              <DeleteButton hideText recordItemId={row.id} />
-            </>
+            <IconButton
+              onClick={(e) => handleMenuClick(e, row)}
+              size="small"
+              aria-controls={open ? "actions-menu" : undefined}
+              aria-haspopup="true"
+              aria-expanded={open ? "true" : undefined}
+            >
+              <MoreVertIcon />
+            </IconButton>
           );
         },
       },
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
 
@@ -99,6 +150,36 @@ export const ProductList = () => {
         columns={columns}
         getRowId={getRowId}
       />
+      
+      {/* Separate menu component outside the renderCell function */}
+      <Menu
+        id="actions-menu"
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleMenuClose}
+        MenuListProps={{
+          'aria-labelledby': 'actions-button',
+        }}
+      >
+        <MenuItem onClick={handleEdit}>
+          <ListItemIcon>
+            <EditIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Edit</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleShow}>
+          <ListItemIcon>
+            <VisibilityIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>View</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleDelete}>
+          <ListItemIcon>
+            <DeleteIcon fontSize="small" color="error" />
+          </ListItemIcon>
+          <ListItemText sx={{ color: 'error.main' }}>Delete</ListItemText>
+        </MenuItem>
+      </Menu>
     </List>
   );
 };

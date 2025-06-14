@@ -1,14 +1,15 @@
 import { ThemeProvider } from "@mui/material/styles";
-import { RefineThemes } from "@refinedev/mui";
 import React, {
   PropsWithChildren,
   createContext,
   useEffect,
   useState,
 } from "react";
+import { PaletteMode } from "@mui/material";
+import { createCustomTheme } from "../theme";
 
 type ColorModeContextType = {
-  mode: string;
+  mode: PaletteMode;
   setMode: () => void;
 };
 
@@ -25,8 +26,8 @@ export const ColorModeContextProvider: React.FC<PropsWithChildren> = ({
   ).matches;
 
   const systemPreference = isSystemPreferenceDark ? "dark" : "light";
-  const [mode, setMode] = useState(
-    colorModeFromLocalStorage || systemPreference
+  const [mode, setMode] = useState<PaletteMode>(
+    (colorModeFromLocalStorage as PaletteMode) || systemPreference
   );
 
   useEffect(() => {
@@ -41,6 +42,9 @@ export const ColorModeContextProvider: React.FC<PropsWithChildren> = ({
     }
   };
 
+  // Create custom theme based on current mode
+  const theme = createCustomTheme(mode);
+
   return (
     <ColorModeContext.Provider
       value={{
@@ -48,10 +52,7 @@ export const ColorModeContextProvider: React.FC<PropsWithChildren> = ({
         mode,
       }}
     >
-      <ThemeProvider
-        // you can change the theme colors here. example: mode === "light" ? RefineThemes.Magenta : RefineThemes.MagentaDark
-        theme={mode === "light" ? RefineThemes.Blue : RefineThemes.BlueDark}
-      >
+      <ThemeProvider theme={theme}>
         {children}
       </ThemeProvider>
     </ColorModeContext.Provider>

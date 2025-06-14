@@ -10,6 +10,8 @@ import { useGetIdentity } from "@refinedev/core";
 import { HamburgerMenu, RefineThemedLayoutV2HeaderProps } from "@refinedev/mui";
 import React, { useContext } from "react";
 import { ColorModeContext } from "../../contexts/color-mode";
+import ReceiptIcon from "@mui/icons-material/Receipt";
+import Box from "@mui/material/Box";
 
 type IUser = {
   id: number;
@@ -25,25 +27,60 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
   const { data: user } = useGetIdentity<IUser>();
 
   return (
-    <AppBar position={sticky ? "sticky" : "relative"}>
+    <AppBar
+      position={sticky ? "sticky" : "relative"}
+      elevation={0}
+      sx={{
+        zIndex: (theme) => theme.zIndex.drawer + 1,
+      }}
+    >
       <Toolbar>
         <Stack
           direction="row"
           width="100%"
-          justifyContent="flex-end"
           alignItems="center"
+          justifyContent="space-between"
         >
-          <HamburgerMenu />
-          <Stack
-            direction="row"
-            width="100%"
-            justifyContent="flex-end"
-            alignItems="center"
-          >
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <HamburgerMenu />
+            <Box
+              display="flex"
+              alignItems="center"
+              gap={1}
+              sx={{
+                cursor: "pointer",
+              }}
+            >
+              <ReceiptIcon color="primary" />
+              <Typography
+                variant="h6"
+                fontWeight="700"
+                color="primary"
+                display={{ xs: "none", sm: "block" }}
+              >
+                Invoice Manager
+              </Typography>
+            </Box>
+          </Stack>
+
+          <Stack direction="row" alignItems="center" gap={2}>
             <IconButton
               color="inherit"
               onClick={() => {
                 setMode();
+              }}
+              sx={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "8px",
+                backgroundColor:
+                  mode === "dark" ? "primary.light" : "primary.light",
+                color: mode === "dark" ? "primary.main" : "primary.main",
+                "&:hover": {
+                  backgroundColor:
+                    mode === "dark" ? "primary.light" : "primary.light",
+                  opacity: 0.8,
+                },
               }}
             >
               {mode === "dark" ? <LightModeOutlined /> : <DarkModeOutlined />}
@@ -69,7 +106,15 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
                     {user?.name}
                   </Typography>
                 )}
-                <Avatar src={user?.avatar} alt={user?.name} />
+                <Avatar
+                  src={user?.avatar}
+                  alt={user?.name}
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    border: (theme) => `2px solid ${theme.palette.primary.main}`,
+                  }}
+                />
               </Stack>
             )}
           </Stack>
