@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   List,
   useDataGrid,
   DateField,
 } from "@refinedev/mui";
-import { DataGrid, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
-import { useMany, useDelete, useCustomMutation } from "@refinedev/core";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { useMany, useDelete, useCustomMutation, useInvalidate, useList } from "@refinedev/core";
 import {
   Chip,
   IconButton,
@@ -62,11 +62,14 @@ interface InvoiceFilter {
 }
 
 export const InvoiceList: React.FC = () => {
+  // State for tracking data refresh
+  const [refreshKey, setRefreshKey] = useState(0);
+  
   // State for filters
   const [filters, setFilters] = useState<InvoiceFilter>({});
   
   // State for selections and actions
-  const [selectedRows, setSelectedRows] = useState<GridRowSelectionModel>([]);
+  const [selectedRows, setSelectedRows] = useState([]);
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
   const [emailMessage, setEmailMessage] = useState('');
   const [selectedInvoiceForEmail, setSelectedInvoiceForEmail] = useState<string | null>(null);
@@ -150,17 +153,28 @@ export const InvoiceList: React.FC = () => {
     }
   });
 
+  // For manual data refresh
+  const { refetch } = useList({
+    resource: "invoice",
+    queryOptions: {
+      enabled: true, // Always enabled
+    },
+  });
+  
+  // For invalidating and refreshing data
+  const invalidate = useInvalidate();
+
+  // Define custom mutations
   const navigate = useNavigate();
   const { mutate: deleteInvoice } = useDelete();
+  const { mutate: markAsPaid } = useCustomMutation();
+  const { mutate: sendEmail, isLoading: isSendingEmail } = useCustomMutation();
 
   // For the dropdown menu
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [actionRow, setActionRow] = React.useState<InvoiceRowData | null>(null);
   const open = Boolean(anchorEl);
 
-  // Define custom mutation for email
-  const { mutate: sendEmail, isLoading: isSendingEmail } = useCustomMutation();
-  
   // Handle filter changes
   const handleFilterChange = (field: keyof InvoiceFilter, value: string | null) => {
     setFilters(prev => ({
@@ -190,6 +204,57 @@ export const InvoiceList: React.FC = () => {
     }
   };
 
+  const handlePaid = () => {
+    if (actionRow) {
+      console.log(`Marking invoice ${actionRow.id} as paid`);
+      
+      markAsPaid(
+        {
+          url: `/api/invoice/mark-as-paid/${actionRow.id}`,
+          method: 'patch',
+          values: {}, // Add an empty values object
+          successNotification: {
+            message: 'Invoice marked as paid successfully',
+            type: 'success',
+          },
+          errorNotification: {
+            message: 'Error marking invoice as paid',
+            type: 'error',
+          },
+        },
+        {
+          onSuccess: () => {
+            console.log("Success callback triggered");
+            
+            // Add a small delay to allow the notification to appear first
+            setTimeout(() => {
+              console.log("Refreshing data after notification");
+              
+              // Multiple approaches to refresh data
+              invalidate({
+                resource: "invoice",
+                invalidates: ["list", "detail"],
+              });
+              
+              // Direct refetch
+              refetch();
+              
+              // Force component refresh
+              setRefreshKey(prev => prev + 1);
+              
+              // Force window reload as last resort
+              window.location.reload();
+            }, 500); // 500ms delay should be enough for notification to appear
+          },
+          onError: (error) => {
+            console.error("Error marking invoice as paid:", error);
+          }
+        }
+      );
+      handleMenuClose();
+    }
+  };
+
   const handleShow = () => {
     if (actionRow?.id) {
       navigate(`/invoice/show/${actionRow.id}`);
@@ -207,11 +272,6 @@ export const InvoiceList: React.FC = () => {
     }
   };
 
-  // Handle row selection change
-  const handleSelectionChange = (newSelection: GridRowSelectionModel) => {
-    setSelectedRows(newSelection);
-  };
-  
   // Handle email sending
   const handleOpenEmailDialog = (invoiceId: string) => {
     setSelectedInvoiceForEmail(invoiceId);
@@ -541,8 +601,6 @@ export const InvoiceList: React.FC = () => {
         rows={rowsWithNumbers}
         columns={columns}
         autoHeight
-        checkboxSelection
-        onRowSelectionModelChange={handleSelectionChange}
       />
 
       {/* Separate menu component outside the renderCell function */}
@@ -577,6 +635,12 @@ export const InvoiceList: React.FC = () => {
             <EmailIcon fontSize="small" color="primary" />
           </ListItemIcon>
           <ListItemText>Send Email</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handlePaid}>
+          <ListItemIcon>
+            <VisibilityIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Mark As Paid</ListItemText>
         </MenuItem>
         <MenuItem onClick={handleDelete}>
           <ListItemIcon>
