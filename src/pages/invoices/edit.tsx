@@ -97,8 +97,7 @@ export const InvoiceEdit: React.FC = () => {
 
   // Log data untuk debugging
   useEffect(() => {
-    console.log("Invoice data:", invoiceData?.data);
-    console.log("Invoice items:", invoiceData?.data?.items);
+
   }, [invoiceData]);
 
   // Fetch related data
@@ -265,8 +264,6 @@ export const InvoiceEdit: React.FC = () => {
       })),
       subtotal,
     };
-    
-    console.log("Form submitted:", values);
     
     // Submit data to API using Refine's useUpdate hook
     mutate(

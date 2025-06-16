@@ -29,8 +29,6 @@ export const CompanyShow = () => {
   const record = data?.data;
   const imageUrl = formatImageUrl(record?.file);
 
-  console.log("Company logo URL:", imageUrl); // For debugging
-
   return (
     <Show isLoading={isLoading}>
       <Stack gap={1}>

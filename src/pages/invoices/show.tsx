@@ -96,8 +96,6 @@ export const InvoiceShow: React.FC = () => {
 
   // Log data untuk debugging
   useEffect(() => {
-    console.log("Invoice data:", record);
-    console.log("Invoice items:", record?.items);
   }, [record]);
 
   // Setup Teams share button
