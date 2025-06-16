@@ -19,7 +19,10 @@ import {
   TableHead,
   TableRow,
   Paper,
+  Button,
 } from "@mui/material";
+import ShareIcon from "@mui/icons-material/Share";
+import { useParams } from "react-router-dom";
 
 interface InvoiceItem {
   id: string;
@@ -39,12 +42,48 @@ export const InvoiceShow: React.FC = () => {
   const { queryResult } = useShow();
   const { data, isLoading } = queryResult;
   const record = data?.data;
+  const { id } = useParams();
 
   // Log data untuk debugging
   useEffect(() => {
     console.log("Invoice data:", record);
     console.log("Invoice items:", record?.items);
   }, [record]);
+
+  // Setup Teams share button
+  useEffect(() => {
+    if (id) {
+      // Clean up any existing scripts first
+      const existingScript = document.getElementById("teams-launcher-script");
+      if (existingScript) {
+        existingScript.remove();
+      }
+
+      // Set up Teams share button
+      const invoiceUrl = `${window.location.origin}/invoice/show/${id}`;
+      const teamsShareDiv = document.getElementById('teams-share');
+      
+      if (teamsShareDiv) {
+        teamsShareDiv.innerHTML = 
+          `<div class="teams-share-button" 
+                data-href="${invoiceUrl}" 
+                data-msg-text="Here is your invoice!" 
+                data-preview="true">
+          </div>`;
+      }
+      
+      // Load Microsoft Teams share script
+      const script = document.createElement('script');
+      script.id = "teams-launcher-script";
+      script.src = 'https://teams.microsoft.com/share/launcher.js';
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
+
+      // Store the invoice URL in a global variable for direct access
+      window.invoiceUrlForTeams = invoiceUrl;
+    }
+  }, [id, record]);
 
   const getStatusChip = (status: string) => {
     let color: 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
@@ -173,6 +212,34 @@ export const InvoiceShow: React.FC = () => {
               <Typography variant="h6">
                 Total: ${record?.subtotal?.toFixed(2) || "0.00"}
               </Typography>
+            </Box>
+          </CardContent>
+        </Card>
+
+        <Card sx={{ mb: 2 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Share Invoice
+            </Typography>
+            <Box display="flex" alignItems="center" gap={2}>
+              <Button 
+                variant="contained" 
+                color="primary" 
+                startIcon={<ShareIcon />}
+                onClick={() => {
+                  // Simulate a click on the actual Teams share button
+                  const teamsShareButton = document.querySelector('.teams-share-button');
+                  if (teamsShareButton) {
+                    // Microsoft's Teams button is actually rendered as an iframe
+                    // We need to programmatically open the share dialog
+                    const invoiceUrl = window.invoiceUrlForTeams || `${window.location.origin}/invoice/show/${id}`;
+                    window.open(`https://teams.microsoft.com/share?url=${encodeURIComponent(invoiceUrl)}&msg=${encodeURIComponent("Here is your invoice!")}`, '_blank', 'width=700,height=600');
+                  }
+                }}
+              >
+                Share to Microsoft Teams
+              </Button>
+              <Box id="teams-share" sx={{ display: 'flex', alignItems: 'center' }}></Box>
             </Box>
           </CardContent>
         </Card>
