@@ -25,29 +25,92 @@ Invoice Manager is an invoice management application that allows you to create, 
 
 - Node.js version 16 or higher
 - npm or yarn
+- Git for cloning the repository
 - Backend API (ensure the backend is running)
+- A modern web browser (Chrome, Firefox, Safari, or Edge)
 
-### Installation
+### Detailed Installation Guide
 
-1. Clone this repository
-2. Install dependencies:
+1. **Clone the Repository**
+   
+   Open your terminal/command prompt and run:
+   ```bash
+   git clone https://github.com/yourusername/invoice-manager.git
+   cd invoice-manager/Frontend
+   ```
 
-```bash
-npm install
-# or
-yarn install
-```
+2. **Install Dependencies**
+   
+   Using npm:
+   ```bash
+   npm install
+   ```
+   
+   Or using yarn:
+   ```bash
+   yarn install
+   ```
+   
+   This will install all required packages specified in package.json.
 
-3. Adjust the API URL in the `src/authProvider.ts` file if necessary
-4. Run the development server:
+3. **Configure Environment**
+   
+   Create a `.env` file in the Frontend directory:
+   ```bash
+   touch .env
+   ```
+   
+   Edit the `.env` file and add the following configuration:
+   ```
+   VITE_API_URL=http://localhost:3001/api
+   ```
+   
+   Adjust the URL if your backend is running on a different port or host.
 
-```bash
-npm run dev
-# or
-yarn dev
-```
+4. **Configure API Connection**
+   
+   Open `src/authProvider.ts` and verify that the API_URL constant points to your backend:
+   ```typescript
+   const API_URL = "/api"; // This will be prefixed with the base URL from the .env file
+   ```
 
-5. Open your browser at `http://localhost:5173`
+5. **Run the Development Server**
+   
+   Using npm:
+   ```bash
+   npm run dev
+   ```
+   
+   Or using yarn:
+   ```bash
+   yarn dev
+   ```
+   
+   This will start the Vite development server.
+
+6. **Access the Application**
+   
+   Open your browser and navigate to:
+   ```
+   http://localhost:8080
+   ```
+   
+   You should see the login page if everything is set up correctly.
+
+7. **Login to the Application**
+   
+   Use the default credentials (if you're using the provided backend):
+   - Email: admin@example.com
+   - Password: password
+   
+   Or use the credentials you've set up in your backend.
+
+### Troubleshooting Installation
+
+- **Backend Connection Issues**: Ensure your backend server is running and accessible
+- **CORS Errors**: Check that your backend allows requests from your frontend origin
+- **Package Installation Errors**: Try deleting `node_modules` folder and `package-lock.json` (or `yarn.lock`), then reinstall dependencies
+- **Port Conflicts**: If port 5173 is already in use, Vite will automatically try to use the next available port
 
 ## Usage
 
