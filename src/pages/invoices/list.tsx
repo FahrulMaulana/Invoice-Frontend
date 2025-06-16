@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   List,
   useDataGrid,
@@ -21,7 +21,6 @@ import {
   InputLabel,
   Select,
   Button,
-  TextField,
   Typography,
   SelectChangeEvent,
   Backdrop,
@@ -29,7 +28,6 @@ import {
 } from "@mui/material";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import EditIcon from "@mui/icons-material/Edit";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -66,9 +64,6 @@ export const InvoiceList: React.FC = () => {
   
   // State for filters
   const [filters, setFilters] = useState<InvoiceFilter>({});
-  
-  // State for selections and actions
-  const [selectedRows, setSelectedRows] = useState([]);
   
   // Create an array of month options
   const months = [
@@ -194,109 +189,6 @@ export const InvoiceList: React.FC = () => {
     setAnchorEl(null);
   };
 
-  const handleEdit = () => {
-    if (actionRow?.id) {
-      navigate(`/invoice/edit/${actionRow.id}`);
-      handleMenuClose();
-    }
-  };
-
-  const handlePaid = () => {
-    if (actionRow) {
-      console.log(`Marking invoice ${actionRow.id} as paid`);
-      
-      markAsPaid(
-        {
-          url: `/api/invoice/mark-as-paid/${actionRow.id}`,
-          method: 'patch',
-          values: {}, // Add an empty values object
-          successNotification: {
-            message: 'Invoice marked as paid successfully',
-            type: 'success',
-          },
-          errorNotification: {
-            message: 'Error marking invoice as paid',
-            type: 'error',
-          },
-        },
-        {
-          onSuccess: () => {
-            console.log("Success callback triggered");
-            
-            // Add a small delay to allow the notification to appear first
-            setTimeout(() => {
-              console.log("Refreshing data after notification");
-              
-              // Multiple approaches to refresh data
-              invalidate({
-                resource: "invoice",
-                invalidates: ["list", "detail"],
-              });
-              
-              // Direct refetch
-              refetch();
-              
-              // Force component refresh
-              setRefreshKey(prev => prev + 1);
-            }, 500); // 500ms delay should be enough for notification to appear
-          },
-          onError: (error) => {
-            console.error("Error marking invoice as paid:", error);
-          }
-        }
-      );
-      handleMenuClose();
-    }
-  };
-
-  const handleDebt = () => {
-    if (actionRow) {
-      console.log(`Marking invoice ${actionRow.id} as debt`);
-      
-      markAsDebt(
-        {
-          url: `/api/invoice/mark-as-debt/${actionRow.id}`,
-          method: 'patch',
-          values: {}, // Add an empty values object
-          successNotification: {
-            message: 'Invoice marked as debt successfully',
-            type: 'success',
-          },
-          errorNotification: {
-            message: 'Error marking invoice as debt',
-            type: 'error',
-          },
-        },
-        {
-          onSuccess: () => {
-            console.log("Success callback triggered");
-            
-            // Add a small delay to allow the notification to appear first
-            setTimeout(() => {
-              console.log("Refreshing data after notification");
-              
-              // Multiple approaches to refresh data
-              invalidate({
-                resource: "invoice",
-                invalidates: ["list", "detail"],
-              });
-              
-              // Direct refetch
-              refetch();
-              
-              // Force component refresh
-              setRefreshKey(prev => prev + 1);
-            }, 500); // 500ms delay should be enough for notification to appear
-          },
-          onError: (error) => {
-            console.error("Error marking invoice as debt:", error);
-          }
-        }
-      );
-      handleMenuClose();
-    }
-  };
-
   const handleShow = () => {
     if (actionRow?.id) {
       navigate(`/invoice/show/${actionRow.id}`);
@@ -314,16 +206,79 @@ export const InvoiceList: React.FC = () => {
     }
   };
 
-  // Handle email sending directly
+  const handlePaid = () => {
+    if (actionRow) {
+      markAsPaid(
+        {
+          url: `/api/invoice/mark-as-paid/${actionRow.id}`,
+          method: 'patch',
+          values: {},
+          successNotification: {
+            message: 'Invoice marked as paid successfully',
+            type: 'success',
+          },
+          errorNotification: {
+            message: 'Error marking invoice as paid',
+            type: 'error',
+          },
+        },
+        {
+          onSuccess: () => {
+            setTimeout(() => {
+              invalidate({
+                resource: "invoice",
+                invalidates: ["list", "detail"],
+              });
+              refetch();
+              setRefreshKey(prev => prev + 1);
+            }, 500);
+          },
+        }
+      );
+      handleMenuClose();
+    }
+  };
+
+  const handleDebt = () => {
+    if (actionRow) {
+      markAsDebt(
+        {
+          url: `/api/invoice/mark-as-debt/${actionRow.id}`,
+          method: 'patch',
+          values: {},
+          successNotification: {
+            message: 'Invoice marked as debt successfully',
+            type: 'success',
+          },
+          errorNotification: {
+            message: 'Error marking invoice as debt',
+            type: 'error',
+          },
+        },
+        {
+          onSuccess: () => {
+            setTimeout(() => {
+              invalidate({
+                resource: "invoice",
+                invalidates: ["list", "detail"],
+              });
+              refetch();
+              setRefreshKey(prev => prev + 1);
+            }, 500);
+          },
+        }
+      );
+      handleMenuClose();
+    }
+  };
+
   const handleSendEmail = () => {
     if (actionRow) {
-      console.log(`Sending email for invoice ${actionRow.id}`);
-      
       sendEmail(
         {
           url: `/api/invoice/send-email/${actionRow.id}`,
           method: 'patch',
-          values: {}, // Empty values object since we're not sending a message
+          values: {},
           successNotification: {
             message: 'Invoice email sent successfully',
             type: 'success',
@@ -335,28 +290,14 @@ export const InvoiceList: React.FC = () => {
         },
         {
           onSuccess: () => {
-            console.log("Email sent successfully");
-            
-            // Close the menu as soon as the request is successful
             handleMenuClose();
-            
-            // Multiple approaches to refresh data
             invalidate({
               resource: "invoice",
               invalidates: ["list", "detail"],
             });
-            
-            // Direct refetch
             refetch();
-            
-            // Force component refresh
             setRefreshKey(prev => prev + 1);
           },
-          onError: (error) => {
-            console.error("Error sending invoice email:", error);
-            // Close the menu even in case of error
-            handleMenuClose();
-          }
         }
       );
     }
@@ -410,40 +351,31 @@ export const InvoiceList: React.FC = () => {
       {
         field: "companyId",
         headerName: "Company",
+        minWidth: 150,
         flex: 1,
         renderCell: function render({ value }) {
           if (companiesIsLoading) {
             return "Loading...";
           }
-          return companiesData?.data?.find((item) => item.id === value)?.name;
+          return companiesData?.data?.find((item) => item.id === value)?.name || "—";
         },
       },
       {
         field: "clientId",
         headerName: "Client",
+        minWidth: 150,
         flex: 1,
         renderCell: function render({ value }) {
           if (clientsIsLoading) {
             return "Loading...";
           }
-          return clientsData?.data?.find((item) => item.id === value)?.legalName;
-        },
-      },
-      {
-        field: "paymentMethodId",
-        headerName: "Payment Method",
-        flex: 1,
-        renderCell: function render({ value }) {
-          if (paymentMethodsIsLoading) {
-            return "Loading...";
-          }
-          return paymentMethodsData?.data?.find((item) => item.id === value)?.methodName;
+          return clientsData?.data?.find((item) => item.id === value)?.legalName || "—";
         },
       },
       {
         field: "status",
         headerName: "Status",
-        flex: 1,
+        minWidth: 120,
         renderCell: function render({ value }) {
           let color: 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
           switch (value) {
@@ -454,7 +386,11 @@ export const InvoiceList: React.FC = () => {
               color = "warning";
               break;
             case "canceled":
+            case "CANCELED":
               color = "error";
+              break;
+            case "UNPAID":
+              color = "default";
               break;
             default:
               color = "default";
@@ -463,35 +399,9 @@ export const InvoiceList: React.FC = () => {
         },
       },
       {
-        field: "date",
-        headerName: "Date",
-        flex: 1,
-        headerAlign: "center",
-        renderCell: function render({ value }) {
-          return (
-            <div style={{ width: '100%', textAlign: 'center', display: 'flex', alignItems: 'center', height: '100%' }}>
-              <DateField value={value} format="LLL" />
-            </div>
-          );
-        },
-      },
-      {
-        field: "dueDate",
-        headerName: "Due Date",
-        flex: 1,
-        headerAlign: "center",
-        renderCell: function render({ value }) {
-          return (
-            <div style={{ width: '100%', textAlign: 'center', display: 'flex', alignItems: 'center', height: '100%' }}>
-              <DateField value={value} format="LLL" />
-            </div>
-          );
-        },
-      },
-      {
         field: "subtotal",
-        headerName: "Total Amount",
-        flex: 1,
+        headerName: "Amount",
+        minWidth: 120,
         renderCell: function render({ value }) {
           return `$${parseFloat(value).toFixed(2)}`;
         },
@@ -523,8 +433,6 @@ export const InvoiceList: React.FC = () => {
       companiesIsLoading,
       clientsData?.data,
       clientsIsLoading,
-      paymentMethodsData?.data,
-      paymentMethodsIsLoading,
     ],
   );
 
@@ -656,11 +564,33 @@ export const InvoiceList: React.FC = () => {
         </CardContent>
       </Card>
 
+      {/* Main DataGrid - simplified to match products table */}
       <DataGrid
         {...dataGridProps}
         rows={rowsWithNumbers}
         columns={columns}
         autoHeight
+        sx={{
+          width: '100%',
+          '& .MuiDataGrid-row': {
+            cursor: 'pointer',
+          },
+          '& .MuiDataGrid-cell:focus': {
+            outline: 'none',
+          },
+          '& .MuiDataGrid-columnHeaders': {
+            backgroundColor: (theme) => theme.palette.primary.main,
+            color: (theme) => theme.palette.primary.contrastText,
+          },
+          '&::-webkit-scrollbar': {
+            width: '8px',
+            height: '8px',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: (theme) => theme.palette.grey[300],
+            borderRadius: '4px',
+          }
+        }}
       />
 
       {/* Separate menu component outside the renderCell function */}
@@ -673,12 +603,19 @@ export const InvoiceList: React.FC = () => {
           'aria-labelledby': 'actions-button',
         }}
       >
-        {/* <MenuItem onClick={handleEdit}>
-          <ListItemIcon>
-            <EditIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Edit</ListItemText>
-        </MenuItem> */}
+        {actionRow && (
+          <Box sx={{ p: 1, borderBottom: 1, borderColor: 'divider' }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+              {companiesData?.data?.find((item) => item.id === actionRow.companyId)?.name}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Amount: ${parseFloat(actionRow.subtotal.toString()).toFixed(2)}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Client: {clientsData?.data?.find((item) => item.id === actionRow.clientId)?.legalName}
+            </Typography>
+          </Box>
+        )}
         <MenuItem onClick={handleShow}>
           <ListItemIcon>
             <VisibilityIcon fontSize="small" />

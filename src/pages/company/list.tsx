@@ -7,11 +7,14 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
+  Box,
+  Avatar,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import EditIcon from "@mui/icons-material/Edit";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import DeleteIcon from "@mui/icons-material/Delete";
+import BusinessIcon from "@mui/icons-material/Business";
 import { useNavigate } from "react-router-dom";
 import { useDelete } from "@refinedev/core";
 
@@ -24,42 +27,57 @@ interface CompanyRowData {
   phone?: string;
   email?: string;
   website?: string;
+  file?: string;
   [key: string]: unknown;
 }
+
+// Helper function to format image URL
+const formatImageUrl = (file?: string) => {
+  if (!file) return null;
+
+  // If it's already a full URL, return it
+  if (file.startsWith("http")) return file;
+
+  // Otherwise, prepend the base URL
+  return `http://localhost:3001/${file}`;
+};
 
 export const CompanyList = () => {
   const { dataGridProps } = useDataGrid<CompanyRowData>({});
   const navigate = useNavigate();
   const { mutate: deleteCompany } = useDelete();
-  
+
   // For the dropdown menu
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [actionRow, setActionRow] = React.useState<CompanyRowData | null>(null);
   const open = Boolean(anchorEl);
-  
-  const handleMenuClick = (event: React.MouseEvent<HTMLButtonElement>, row: CompanyRowData) => {
+
+  const handleMenuClick = (
+    event: React.MouseEvent<HTMLButtonElement>,
+    row: CompanyRowData
+  ) => {
     setAnchorEl(event.currentTarget);
     setActionRow(row);
   };
-  
+
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
-  
+
   const handleEdit = () => {
     if (actionRow?.id) {
       navigate(`/company/edit/${actionRow.id}`);
       handleMenuClose();
     }
   };
-  
+
   const handleShow = () => {
     if (actionRow?.id) {
       navigate(`/company/show/${actionRow.id}`);
       handleMenuClose();
     }
   };
-  
+
   const handleDelete = () => {
     if (actionRow?.id) {
       deleteCompany({
@@ -98,6 +116,34 @@ export const CompanyList = () => {
         align: "left",
         headerAlign: "left",
         sortable: false,
+      },
+      {
+        field: "file",
+        headerName: "Logo",
+        width: 80,
+        renderCell: function render({ row }) {
+          const imageUrl = formatImageUrl(row.file as string);
+
+          return (
+            <Box sx={{ display: "flex", justifyContent: "center" }}>
+              {imageUrl ? (
+                <Avatar
+                  src={imageUrl}
+                  alt={row.name as string}
+                  variant="rounded"
+                  sx={{ width: 40, height: 40 }}
+                />
+              ) : (
+                <Avatar
+                  variant="rounded"
+                  sx={{ width: 40, height: 40, bgcolor: "grey.200" }}
+                >
+                  <BusinessIcon color="disabled" />
+                </Avatar>
+              )}
+            </Box>
+          );
+        },
       },
       {
         field: "name",
@@ -152,7 +198,7 @@ export const CompanyList = () => {
         columns={columns}
         getRowId={getRowId}
       />
-      
+
       {/* Separate menu component outside the renderCell function */}
       <Menu
         id="actions-menu"
@@ -160,7 +206,7 @@ export const CompanyList = () => {
         open={open}
         onClose={handleMenuClose}
         MenuListProps={{
-          'aria-labelledby': 'actions-button',
+          "aria-labelledby": "actions-button",
         }}
       >
         <MenuItem onClick={handleEdit}>
@@ -179,7 +225,7 @@ export const CompanyList = () => {
           <ListItemIcon>
             <DeleteIcon fontSize="small" color="error" />
           </ListItemIcon>
-          <ListItemText sx={{ color: 'error.main' }}>Delete</ListItemText>
+          <ListItemText sx={{ color: "error.main" }}>Delete</ListItemText>
         </MenuItem>
       </Menu>
     </List>

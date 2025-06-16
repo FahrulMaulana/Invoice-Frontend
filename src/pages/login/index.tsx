@@ -20,7 +20,7 @@ export const Login = () => {
           }}
         >
           <img
-            src="/pngwing.png"
+            src="/logo.png"
             alt="Invoice Manager"
             style={{
               width: "60px",

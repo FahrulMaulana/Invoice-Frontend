@@ -1,9 +1,9 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Show,
   DateField,
 } from "@refinedev/mui";
-import { useShow, useMany } from "@refinedev/core";
+import { useShow } from "@refinedev/core";
 import {
   Typography,
   Box,
@@ -20,8 +20,11 @@ import {
   TableRow,
   Paper,
   Button,
+  Backdrop,
+  CircularProgress,
 } from "@mui/material";
 import ShareIcon from "@mui/icons-material/Share";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { useParams } from "react-router-dom";
 
 interface InvoiceItem {
@@ -43,6 +46,53 @@ export const InvoiceShow: React.FC = () => {
   const { data, isLoading } = queryResult;
   const record = data?.data;
   const { id } = useParams();
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  
+  // Handle PDF export
+  const handleExportPdf = () => {
+    if (id) {
+      setIsGeneratingPdf(true);
+      
+      // Create a direct fetch request to the API endpoint
+      fetch(`/api/invoice/generate-pdf/${id}`, {
+        method: 'PATCH', // The controller uses PATCH, not GET
+        headers: {
+          'Accept': 'application/pdf',
+          // Include authorization token if needed
+          'Authorization': `Bearer ${localStorage.getItem('refine-auth')}`,
+        },
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('PDF generation failed');
+          }
+          return response.blob();
+        })
+        .then(blob => {
+          // Create a URL for the blob
+          const url = window.URL.createObjectURL(blob);
+          
+          // Create a link element to trigger the download
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `Invoice-${record?.invoiceNumber || id}.pdf`;
+          
+          // Append to the document, click it, and then remove it
+          document.body.appendChild(a);
+          a.click();
+          
+          // Clean up
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+          
+          setIsGeneratingPdf(false);
+        })
+        .catch(error => {
+          console.error('Error generating PDF:', error);
+          setIsGeneratingPdf(false);
+        });
+    }
+  };
 
   // Log data untuk debugging
   useEffect(() => {
@@ -243,7 +293,46 @@ export const InvoiceShow: React.FC = () => {
             </Box>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Export Invoice
+            </Typography>
+            <Button
+              variant="contained"
+              color="secondary"
+              startIcon={<PictureAsPdfIcon />}
+              onClick={handleExportPdf}
+              disabled={isGeneratingPdf}
+            >
+              {isGeneratingPdf ? <CircularProgress size={24} /> : "Download PDF"}
+            </Button>
+          </CardContent>
+        </Card>
       </Box>
+      
+      {/* PDF Generation Loading Backdrop */}
+      <Backdrop
+        sx={{ 
+          color: '#fff', 
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2
+        }}
+        open={isGeneratingPdf}
+      >
+        <CircularProgress color="secondary" />
+        <Typography variant="h6">Generating PDF...</Typography>
+      </Backdrop>
     </Show>
   );
 };
+
+// Add TypeScript declaration for global window property
+declare global {
+  interface Window {
+    invoiceUrlForTeams?: string;
+  }
+}

@@ -1,48 +1,117 @@
-# Frontend
+# Invoice Manager Frontend
 
 <div align="center" style="margin: 30px;">
-    <a href="https://refine.dev">
-    <img alt="refine logo" src="https://refine.ams3.cdn.digitaloceanspaces.com/readme/refine-readme-banner.png">
-    </a>
+    <img alt="invoice manager logo" src="/public/logo.png" height="100">
 </div>
 <br/>
 
-This [Refine](https://github.com/refinedev/refine) project was generated with [create refine-app](https://github.com/refinedev/refine/tree/master/packages/create-refine-app).
+## About the Application
+
+Invoice Manager is an invoice management application that allows you to create, edit, and track invoices. This application is built using [Refine](https://github.com/refinedev/refine) as a React framework.
+
+### Key Features
+
+- **Company Management**: Manage company profiles including logos
+- **Client Management**: Manage client data with logos and payment terms
+- **Product Management**: Register products and prices
+- **Payment Method Management**: Configure various payment methods
+- **Invoice Creation**: Create invoices with automatic calculations
+- **Payment Status Tracking**: Monitor invoice payment statuses
+- **PDF Export**: Export invoices to PDF format
 
 ## Getting Started
 
-A React Framework for building internal tools, admin panels, dashboards & B2B apps with unmatched flexibility ✨
+### Prerequisites
 
-Refine's hooks and components simplifies the development process and eliminates the repetitive tasks by providing industry-standard solutions for crucial aspects of a project, including authentication, access control, routing, networking, state management, and i18n.
+- Node.js version 16 or higher
+- npm or yarn
+- Backend API (ensure the backend is running)
+
+### Installation
+
+1. Clone this repository
+2. Install dependencies:
+
+```bash
+npm install
+# or
+yarn install
+```
+
+3. Adjust the API URL in the `src/authProvider.ts` file if necessary
+4. Run the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+```
+
+5. Open your browser at `http://localhost:5173`
+
+## Usage
+
+1. **Login**: Use registered credentials to log in
+2. **Add Company**: Add your company information first
+3. **Add Clients**: Register clients who will receive invoices
+4. **Add Products**: Register products to be sold
+5. **Add Payment Methods**: Register accepted payment methods
+6. **Create Invoices**: Create new invoices by selecting clients, products, and payment methods
+
+## Project Structure
+
+- `src/`: Application source code
+  - `components/`: Reusable React components
+  - `contexts/`: Context API for global state management
+  - `pages/`: Application pages
+    - `clients/`: Client management
+    - `company/`: Company management
+    - `invoices/`: Invoice management
+    - `payment-methods/`: Payment method management
+    - `products/`: Product management
+  - `App.tsx`: Main application component
+  - `authProvider.ts`: Authentication configuration
+
+## Support
+
+If you encounter issues or have questions, please create an Issue in this repository.
+
+## Technology Stack
+
+- **React**: JavaScript library for building user interfaces
+- **Refine**: Headless React framework for building CRUD applications
+- **Material UI**: React component library for design
+- **React Router**: Page navigation
+- **Axios**: HTTP client for API communication
 
 ## Available Scripts
 
-### Running the development server.
+### Run development server
 
 ```bash
-    npm run dev
+npm run dev
 ```
 
-### Building for production.
+### Build for production
 
 ```bash
-    npm run build
+npm run build
 ```
 
-### Running the production server.
+### Run production server
 
 ```bash
-    npm run start
+npm run start
 ```
 
 ## Learn More
 
-To learn more about **Refine**, please check out the [Documentation](https://refine.dev/docs)
+To learn more about the technologies used:
 
-- **REST Data Provider** [Docs](https://refine.dev/docs/core/providers/data-provider/#overview)
-- **Material UI** [Docs](https://refine.dev/docs/ui-frameworks/mui/tutorial/)
-- **React Router** [Docs](https://refine.dev/docs/core/providers/router-provider/)
-- **Custom Auth Provider** [Docs](https://refine.dev/docs/core/providers/auth-provider/)
+- **Refine** [Documentation](https://refine.dev/docs)
+- **Material UI** [Documentation](https://refine.dev/docs/ui-frameworks/mui/tutorial/)
+- **React Router** [Documentation](https://refine.dev/docs/core/providers/router-provider/)
+- **Custom Auth Provider** [Documentation](https://refine.dev/docs/core/providers/auth-provider/)
 
 ## License
 

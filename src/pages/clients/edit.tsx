@@ -8,7 +8,15 @@ export const ClientEdit = () => {
     refineCore: { queryResult, formLoading },
     register,
     formState: { errors },
-  } = useForm({});
+  } = useForm({
+    refineCoreProps: {
+      action: "edit",
+      resource: "clients",
+      id: window.location.pathname.split("/").pop(),
+      redirect: "list",
+      method: "patch", // Explicitly set method to patch for edit operations
+    },
+  });
 
   const clientData = queryResult?.data?.data;
 
