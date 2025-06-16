@@ -24,11 +24,8 @@ import {
   TextField,
   Typography,
   SelectChangeEvent,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
+  Backdrop,
+  CircularProgress,
 } from "@mui/material";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -37,6 +34,8 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ClearIcon from "@mui/icons-material/Clear";
 import EmailIcon from "@mui/icons-material/Email";
+import PaidIcon from "@mui/icons-material/Paid";
+import MoneyOffIcon from "@mui/icons-material/MoneyOff";
 import { useNavigate } from "react-router-dom";
 
 // Define interface for invoice row data
@@ -70,9 +69,6 @@ export const InvoiceList: React.FC = () => {
   
   // State for selections and actions
   const [selectedRows, setSelectedRows] = useState([]);
-  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
-  const [emailMessage, setEmailMessage] = useState('');
-  const [selectedInvoiceForEmail, setSelectedInvoiceForEmail] = useState<string | null>(null);
   
   // Create an array of month options
   const months = [
@@ -168,6 +164,7 @@ export const InvoiceList: React.FC = () => {
   const navigate = useNavigate();
   const { mutate: deleteInvoice } = useDelete();
   const { mutate: markAsPaid } = useCustomMutation();
+  const { mutate: markAsDebt } = useCustomMutation();
   const { mutate: sendEmail, isLoading: isSendingEmail } = useCustomMutation();
 
   // For the dropdown menu
@@ -241,13 +238,58 @@ export const InvoiceList: React.FC = () => {
               
               // Force component refresh
               setRefreshKey(prev => prev + 1);
-              
-              // Force window reload as last resort
-              window.location.reload();
             }, 500); // 500ms delay should be enough for notification to appear
           },
           onError: (error) => {
             console.error("Error marking invoice as paid:", error);
+          }
+        }
+      );
+      handleMenuClose();
+    }
+  };
+
+  const handleDebt = () => {
+    if (actionRow) {
+      console.log(`Marking invoice ${actionRow.id} as debt`);
+      
+      markAsDebt(
+        {
+          url: `/api/invoice/mark-as-debt/${actionRow.id}`,
+          method: 'patch',
+          values: {}, // Add an empty values object
+          successNotification: {
+            message: 'Invoice marked as debt successfully',
+            type: 'success',
+          },
+          errorNotification: {
+            message: 'Error marking invoice as debt',
+            type: 'error',
+          },
+        },
+        {
+          onSuccess: () => {
+            console.log("Success callback triggered");
+            
+            // Add a small delay to allow the notification to appear first
+            setTimeout(() => {
+              console.log("Refreshing data after notification");
+              
+              // Multiple approaches to refresh data
+              invalidate({
+                resource: "invoice",
+                invalidates: ["list", "detail"],
+              });
+              
+              // Direct refetch
+              refetch();
+              
+              // Force component refresh
+              setRefreshKey(prev => prev + 1);
+            }, 500); // 500ms delay should be enough for notification to appear
+          },
+          onError: (error) => {
+            console.error("Error marking invoice as debt:", error);
           }
         }
       );
@@ -272,33 +314,51 @@ export const InvoiceList: React.FC = () => {
     }
   };
 
-  // Handle email sending
-  const handleOpenEmailDialog = (invoiceId: string) => {
-    setSelectedInvoiceForEmail(invoiceId);
-    setIsEmailDialogOpen(true);
-  };
-  
+  // Handle email sending directly
   const handleSendEmail = () => {
-    if (selectedInvoiceForEmail) {
-      sendEmail({
-        url: '/invoice/action/send-email',
-        method: 'post',
-        values: {
-          invoiceId: selectedInvoiceForEmail,
-          message: emailMessage
+    if (actionRow) {
+      console.log(`Sending email for invoice ${actionRow.id}`);
+      
+      sendEmail(
+        {
+          url: `/api/invoice/send-email/${actionRow.id}`,
+          method: 'patch',
+          values: {}, // Empty values object since we're not sending a message
+          successNotification: {
+            message: 'Invoice email sent successfully',
+            type: 'success',
+          },
+          errorNotification: {
+            message: 'Error sending invoice email',
+            type: 'error',
+          },
         },
-        successNotification: {
-          message: 'Invoice email has been sent successfully',
-          type: 'success',
-        },
-        errorNotification: {
-          message: 'Error sending invoice email',
-          type: 'error',
-        },
-      });
-      setIsEmailDialogOpen(false);
-      setEmailMessage('');
-      setSelectedInvoiceForEmail(null);
+        {
+          onSuccess: () => {
+            console.log("Email sent successfully");
+            
+            // Close the menu as soon as the request is successful
+            handleMenuClose();
+            
+            // Multiple approaches to refresh data
+            invalidate({
+              resource: "invoice",
+              invalidates: ["list", "detail"],
+            });
+            
+            // Direct refetch
+            refetch();
+            
+            // Force component refresh
+            setRefreshKey(prev => prev + 1);
+          },
+          onError: (error) => {
+            console.error("Error sending invoice email:", error);
+            // Close the menu even in case of error
+            handleMenuClose();
+          }
+        }
+      );
     }
   };
 
@@ -613,34 +673,35 @@ export const InvoiceList: React.FC = () => {
           'aria-labelledby': 'actions-button',
         }}
       >
-        <MenuItem onClick={handleEdit}>
+        {/* <MenuItem onClick={handleEdit}>
           <ListItemIcon>
             <EditIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Edit</ListItemText>
-        </MenuItem>
+        </MenuItem> */}
         <MenuItem onClick={handleShow}>
           <ListItemIcon>
             <VisibilityIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>View</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => {
-          if (actionRow?.id) {
-            handleOpenEmailDialog(actionRow.id);
-            handleMenuClose();
-          }
-        }}>
+        <MenuItem onClick={handleSendEmail} disabled={isSendingEmail}>
           <ListItemIcon>
             <EmailIcon fontSize="small" color="primary" />
           </ListItemIcon>
-          <ListItemText>Send Email</ListItemText>
+          <ListItemText>{isSendingEmail ? 'Sending...' : 'Send Email'}</ListItemText>
         </MenuItem>
         <MenuItem onClick={handlePaid}>
           <ListItemIcon>
-            <VisibilityIcon fontSize="small" />
+            <PaidIcon fontSize="small" color="success" />
           </ListItemIcon>
           <ListItemText>Mark As Paid</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleDebt}>
+          <ListItemIcon>
+            <MoneyOffIcon fontSize="small" color="warning" />
+          </ListItemIcon>
+          <ListItemText>Mark As Debt</ListItemText>
         </MenuItem>
         <MenuItem onClick={handleDelete}>
           <ListItemIcon>
@@ -650,43 +711,27 @@ export const InvoiceList: React.FC = () => {
         </MenuItem>
       </Menu>
 
-      {/* Email Dialog */}
-      <Dialog
-        open={isEmailDialogOpen}
-        onClose={() => setIsEmailDialogOpen(false)}
-        aria-labelledby="email-dialog-title"
-        aria-describedby="email-dialog-description"
+      {/* Loading backdrop for email sending */}
+      <Backdrop
+        sx={{ 
+          color: '#fff', 
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2
+        }}
+        open={isSendingEmail}
       >
-        <DialogTitle id="email-dialog-title">Send Invoice via Email</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="email-dialog-description">
-            Enter your message below to send it with the invoice.
-          </DialogContentText>
-          <TextField
-            autoFocus
-            margin="dense"
-            id="email-message"
-            label="Message"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={emailMessage}
-            onChange={(e) => setEmailMessage(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setIsEmailDialogOpen(false)} color="primary">
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSendEmail} 
-            color="primary"
-            disabled={isSendingEmail}
-          >
-            {isSendingEmail ? 'Sending...' : 'Send Email'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <CircularProgress color="primary" />
+        <Typography variant="h6">Sending Email...</Typography>
+      </Backdrop>
+
+      {/* Backdrop and CircularProgress for loading indicator */}
+      {(companiesIsLoading || clientsIsLoading || paymentMethodsIsLoading) && (
+        <Backdrop open={true} sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+          <CircularProgress color="primary" />
+        </Backdrop>
+      )}
     </List>
   );
 };
