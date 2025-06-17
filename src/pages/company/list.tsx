@@ -33,19 +33,8 @@ interface CompanyRowData {
 
 // Helper function to format image URL
 const formatImageUrl = (file?: string) => {
-  if (!file) return null;
 
-  // If it's already a full URL, return it as-is
-  if (file.startsWith("http")) return file;
-
-  // Determine base URL
-  const isLocalhost =
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
-  const baseUrl = isLocalhost
-    ? 'http://localhost:3001'
-    : 'http://49.13.8.102:3001';
+  const baseUrl = 'http://49.13.8.102:3001';
 
   return `${baseUrl}/${file}`;
 };
@@ -112,6 +101,7 @@ export const CompanyList = () => {
       no: index + 1, // Add incremental number starting from 1
     }));
   }, [dataGridProps.rows]);
+  
 
   const columns = React.useMemo<GridColDef[]>(
     () => [
@@ -130,6 +120,7 @@ export const CompanyList = () => {
         headerName: "Logo",
         width: 80,
         renderCell: function render({ row }) {
+          
           const imageUrl = formatImageUrl(row.file as string);
 
           return (
