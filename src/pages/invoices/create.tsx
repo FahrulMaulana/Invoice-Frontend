@@ -166,8 +166,6 @@ export const InvoiceCreate: React.FC = () => {
       total: calculateTotal(),
     };
     
-    console.log("Form submitted:", values);
-    
     // Submit data to API using Refine's useCreate hook
     mutate(
       {

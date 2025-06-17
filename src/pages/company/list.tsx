@@ -17,6 +17,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import BusinessIcon from "@mui/icons-material/Business";
 import { useNavigate } from "react-router-dom";
 import { useDelete } from "@refinedev/core";
+import { log } from "node:console";
 
 // Define a type for the row data
 interface CompanyRowData {
@@ -34,7 +35,9 @@ interface CompanyRowData {
 // Helper function to format image URL
 const formatImageUrl = (file?: string) => {
 
-  const baseUrl = 'http://49.13.8.102:3001';
+  const isProduction = import.meta.env.VITE_APP_ENV === 'local'
+  
+  const baseUrl = isProduction?  'http://localhost:3001': 'http://49.13.8.102:3001'
 
   return `${baseUrl}/${file}`;
 };

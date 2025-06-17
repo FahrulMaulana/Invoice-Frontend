@@ -24,16 +24,12 @@ interface FormErrors {
 
 // Helper function to format image URL
 const formatImageUrl = (file?: string) => {
-  if (!file) return null;
 
-  // If it's already a full URL, return it
-  if (file.startsWith("http")) return file;
+  const isProduction = import.meta.env.VITE_APP_ENV === 'local'
 
-  // Check if file starts with a slash
-  const formattedPath = file.startsWith("/") ? file.substring(1) : file;
-  
-  // Otherwise, prepend the base URL
-  return `http://localhost:3001/${formattedPath}`;
+  const baseUrl = isProduction? 'http://localhost:3001': 'http://49.13.8.102:3001'
+
+  return `${baseUrl}/${file}`;
 };
 
 export const CompanyEdit = () => {

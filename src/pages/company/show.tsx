@@ -9,16 +9,11 @@ import { useState } from "react";
 
 // Helper function to format image URL
 const formatImageUrl = (file?: string) => {
-  if (!file) return null;
+  const isProduction = import.meta.env.VITE_APP_ENV  === 'local'
 
-  // If it's already a full URL, return it
-  if (file.startsWith("http")) return file;
+  const baseUrl = isProduction? 'http://localhost:3001': 'http://49.13.8.102:3001'
 
-  // Check if file starts with a slash
-  const formattedPath = file.startsWith("/") ? file.substring(1) : file;
-
-  // Otherwise, prepend the base URL
-  return `http://localhost:3001/${formattedPath}`;
+  return `${baseUrl}/${file}`;
 };
 
 export const CompanyShow = () => {
