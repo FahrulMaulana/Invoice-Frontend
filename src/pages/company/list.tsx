@@ -35,11 +35,19 @@ interface CompanyRowData {
 const formatImageUrl = (file?: string) => {
   if (!file) return null;
 
-  // If it's already a full URL, return it
+  // If it's already a full URL, return it as-is
   if (file.startsWith("http")) return file;
 
-  // Otherwise, prepend the base URL
-  return `http://localhost:3001/${file}`;
+  // Determine base URL
+  const isLocalhost =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+  const baseUrl = isLocalhost
+    ? 'http://localhost:3001'
+    : 'http://49.13.8.102:3001';
+
+  return `${baseUrl}/${file}`;
 };
 
 export const CompanyList = () => {
