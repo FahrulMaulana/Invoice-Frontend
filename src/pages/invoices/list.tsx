@@ -578,10 +578,6 @@ export const InvoiceList: React.FC = () => {
           '& .MuiDataGrid-cell:focus': {
             outline: 'none',
           },
-          '& .MuiDataGrid-columnHeaders': {
-            backgroundColor: (theme) => theme.palette.primary.main,
-            color: (theme) => theme.palette.primary.contrastText,
-          },
           '&::-webkit-scrollbar': {
             width: '8px',
             height: '8px',
