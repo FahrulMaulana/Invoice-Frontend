@@ -25,6 +25,7 @@ import {
   SelectChangeEvent,
   Backdrop,
   CircularProgress,
+  Tooltip,
 } from "@mui/material";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -34,6 +35,7 @@ import ClearIcon from "@mui/icons-material/Clear";
 import EmailIcon from "@mui/icons-material/Email";
 import PaidIcon from "@mui/icons-material/Paid";
 import MoneyOffIcon from "@mui/icons-material/MoneyOff";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { useNavigate } from "react-router-dom";
 
 // Define interface for invoice row data
@@ -46,6 +48,7 @@ interface InvoiceRowData {
   date: string;
   dueDate: string;
   subtotal: number;
+  invoiceNumber?: string;
   no?: number; // Optional property for row numbering
 }
 
@@ -64,6 +67,18 @@ export const InvoiceList: React.FC = () => {
   
   // State for filters
   const [filters, setFilters] = useState<InvoiceFilter>({});
+  
+  // State for PDF generation
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [generatingPdfId, setGeneratingPdfId] = useState<string | null>(null);
+  
+  // Add state variables for marking invoices as paid
+  const [isMarkingPaid, setIsMarkingPaid] = useState(false);
+  const [markingPaidId, setMarkingPaidId] = useState<string | null>(null);
+  
+  // Re-defining the sendEmail mutation with explicit loading state management
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [sendingEmailId, setSendingEmailId] = useState<string | null>(null);
   
   // Create an array of month options
   const months = [
@@ -160,8 +175,7 @@ export const InvoiceList: React.FC = () => {
   const { mutate: deleteInvoice } = useDelete();
   const { mutate: markAsPaid } = useCustomMutation();
   const { mutate: markAsDebt } = useCustomMutation();
-  const { mutate: sendEmail, isLoading: isSendingEmail } = useCustomMutation();
-
+  
   // For the dropdown menu
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [actionRow, setActionRow] = React.useState<InvoiceRowData | null>(null);
@@ -206,36 +220,58 @@ export const InvoiceList: React.FC = () => {
     }
   };
 
-  const handlePaid = () => {
-    if (actionRow) {
-      markAsPaid(
-        {
-          url: `/api/invoice/mark-as-paid/${actionRow.id}`,
-          method: 'patch',
-          values: {},
-          successNotification: {
-            message: 'Invoice marked as paid successfully',
-            type: 'success',
-          },
-          errorNotification: {
-            message: 'Error marking invoice as paid',
-            type: 'error',
-          },
+  const handlePaid = (row: InvoiceRowData) => {
+    const id = row.id;
+    if (id) {
+      setIsMarkingPaid(true);
+      setMarkingPaidId(id);
+      
+      // Create a direct fetch request to the API endpoint
+      fetch(`/api/invoice/mark-as-paid/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('refine-auth')}`,
         },
-        {
-          onSuccess: () => {
-            setTimeout(() => {
-              invalidate({
-                resource: "invoice",
-                invalidates: ["list", "detail"],
-              });
-              refetch();
-              setRefreshKey(prev => prev + 1);
-            }, 500);
-          },
-        }
-      );
-      handleMenuClose();
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Failed to mark invoice as paid');
+          }
+          
+          // Show success notification
+          const event = new CustomEvent('refine:notification', {
+            detail: {
+              type: 'success',
+              message: 'Invoice marked as paid successfully',
+            },
+          });
+          document.dispatchEvent(event);
+          
+          // Refresh data
+          invalidate({
+            resource: "invoice",
+            invalidates: ["list", "detail"],
+          });
+          refetch();
+          setRefreshKey(prev => prev + 1);
+        })
+        .catch(error => {
+          console.error('Error marking invoice as paid:', error);
+          
+          // Show error notification
+          const event = new CustomEvent('refine:notification', {
+            detail: {
+              type: 'error',
+              message: 'Error marking invoice as paid',
+            },
+          });
+          document.dispatchEvent(event);
+        })
+        .finally(() => {
+          setIsMarkingPaid(false);
+          setMarkingPaidId(null);
+        });
     }
   };
 
@@ -272,34 +308,107 @@ export const InvoiceList: React.FC = () => {
     }
   };
 
-  const handleSendEmail = () => {
-    if (actionRow) {
-      sendEmail(
-        {
-          url: `/api/invoice/send-email/${actionRow.id}`,
-          method: 'patch',
-          values: {},
-          successNotification: {
-            message: 'Invoice email sent successfully',
-            type: 'success',
-          },
-          errorNotification: {
-            message: 'Error sending invoice email',
-            type: 'error',
-          },
+  const handleSendEmail = (row: InvoiceRowData) => {
+    const id = row.id;
+    if (id) {
+      setIsSendingEmail(true);
+      setSendingEmailId(id);
+      
+      // Create a direct fetch request to the API endpoint
+      fetch(`/api/invoice/send-email/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('refine-auth')}`,
         },
-        {
-          onSuccess: () => {
-            handleMenuClose();
-            invalidate({
-              resource: "invoice",
-              invalidates: ["list", "detail"],
-            });
-            refetch();
-            setRefreshKey(prev => prev + 1);
-          },
-        }
-      );
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Failed to send email');
+          }
+          
+          // Show success notification
+          const event = new CustomEvent('refine:notification', {
+            detail: {
+              type: 'success',
+              message: 'Invoice email sent successfully',
+            },
+          });
+          document.dispatchEvent(event);
+          
+          // Refresh data
+          invalidate({
+            resource: "invoice",
+            invalidates: ["list", "detail"],
+          });
+          refetch();
+          setRefreshKey(prev => prev + 1);
+        })
+        .catch(error => {
+          console.error('Error sending invoice email:', error);
+          
+          // Show error notification
+          const event = new CustomEvent('refine:notification', {
+            detail: {
+              type: 'error',
+              message: 'Error sending invoice email',
+            },
+          });
+          document.dispatchEvent(event);
+        })
+        .finally(() => {
+          setIsSendingEmail(false);
+          setSendingEmailId(null);
+        });
+    }
+  };
+
+  // Handle PDF export
+  const handleExportPdf = (row: InvoiceRowData) => {
+    const id = row.id;
+    if (id) {
+      setIsGeneratingPdf(true);
+      setGeneratingPdfId(id);
+      
+      // Create a direct fetch request to the API endpoint
+      fetch(`/api/invoice/generate-pdf/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Accept': 'application/pdf',
+          'Authorization': `Bearer ${localStorage.getItem('refine-auth')}`,
+        },
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('PDF generation failed');
+          }
+          return response.blob();
+        })
+        .then(blob => {
+          // Create a URL for the blob
+          const url = window.URL.createObjectURL(blob);
+          
+          // Create a link element to trigger the download
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `Invoice-${row.invoiceNumber || id}.pdf`;
+          
+          // Append to the document, click it, and then remove it
+          document.body.appendChild(a);
+          a.click();
+          
+          // Clean up
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+          
+          setIsGeneratingPdf(false);
+          setGeneratingPdfId(null);
+        })
+        .catch(error => {
+          console.error('Error generating PDF:', error);
+          setIsGeneratingPdf(false);
+          setGeneratingPdfId(null);
+        });
     }
   };
 
@@ -355,9 +464,11 @@ export const InvoiceList: React.FC = () => {
         flex: 1,
         renderCell: function render({ value }) {
           if (companiesIsLoading) {
-            return "Loading...";
+            return <Typography color="textPrimary">Loading...</Typography>;
           }
-          return companiesData?.data?.find((item) => item.id === value)?.name || "—";
+          return <Typography color="textPrimary">
+            {companiesData?.data?.find((item) => item.id === value)?.name || "—"}
+          </Typography>;
         },
       },
       {
@@ -367,9 +478,11 @@ export const InvoiceList: React.FC = () => {
         flex: 1,
         renderCell: function render({ value }) {
           if (clientsIsLoading) {
-            return "Loading...";
+            return <Typography color="textPrimary">Loading...</Typography>;
           }
-          return clientsData?.data?.find((item) => item.id === value)?.legalName || "—";
+          return <Typography color="textPrimary">
+            {clientsData?.data?.find((item) => item.id === value)?.legalName || "—"}
+          </Typography>;
         },
       },
       {
@@ -395,7 +508,15 @@ export const InvoiceList: React.FC = () => {
             default:
               color = "default";
           }
-          return <Chip color={color} label={value} />;
+          return <Chip 
+            color={color} 
+            label={value}
+            sx={{ 
+              "& .MuiChip-label": { 
+                color: color === 'default' ? 'text.primary' : undefined 
+              } 
+            }}
+          />;
         },
       },
       {
@@ -403,7 +524,9 @@ export const InvoiceList: React.FC = () => {
         headerName: "Amount",
         minWidth: 120,
         renderCell: function render({ value }) {
-          return `$${parseFloat(value).toFixed(2)}`;
+          return <Typography color="textPrimary">
+            ${parseFloat(value).toFixed(2)}
+          </Typography>;
         },
       },
       {
@@ -411,19 +534,70 @@ export const InvoiceList: React.FC = () => {
         headerName: "Actions",
         align: "center",
         headerAlign: "center",
-        minWidth: 120,
+        minWidth: 200,
         sortable: false,
         renderCell: function render({ row }) {
           return (
-            <IconButton
-              onClick={(e) => handleMenuClick(e, row)}
-              size="small"
-              aria-controls={open ? "actions-menu" : undefined}
-              aria-haspopup="true"
-              aria-expanded={open ? "true" : undefined}
-            >
-              <MoreVertIcon />
-            </IconButton>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              {/* Direct action buttons - View button removed from here */}
+              <Tooltip title="Mark as Paid">
+                <IconButton
+                  color="success"
+                  onClick={() => {
+                    setActionRow(row);
+                    handlePaid(row);
+                  }}
+                  size="small"
+                  disabled={row.status === "PAID"}
+                >
+                  <PaidIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              
+              <Tooltip title="Send Email">
+                <IconButton
+                  color="primary"
+                  onClick={() => {
+                    setActionRow(row);
+                    handleSendEmail(row);
+                  }}
+                  size="small"
+                  disabled={isSendingEmail}
+                >
+                  {isSendingEmail ? 
+                    <CircularProgress size={20} color="primary" /> : 
+                    <EmailIcon fontSize="small" />
+                  }
+                </IconButton>
+              </Tooltip>
+              
+              <Tooltip title="Download PDF">
+                <IconButton
+                  color="secondary"
+                  onClick={() => handleExportPdf(row)}
+                  size="small"
+                  disabled={isGeneratingPdf && generatingPdfId === row.id}
+                >
+                  {isGeneratingPdf && generatingPdfId === row.id ? 
+                    <CircularProgress size={20} color="secondary" /> : 
+                    <PictureAsPdfIcon fontSize="small" />
+                  }
+                </IconButton>
+              </Tooltip>
+
+              {/* More options button */}
+              <Tooltip title="More Actions">
+                <IconButton
+                  onClick={(e) => handleMenuClick(e, row)}
+                  size="small"
+                  aria-controls={open ? "actions-menu" : undefined}
+                  aria-haspopup="true"
+                  aria-expanded={open ? "true" : undefined}
+                >
+                  <MoreVertIcon />
+                </IconButton>
+              </Tooltip>
+            </Box>
           );
         },
       },
@@ -433,6 +607,9 @@ export const InvoiceList: React.FC = () => {
       companiesIsLoading,
       clientsData?.data,
       clientsIsLoading,
+      isGeneratingPdf,
+      generatingPdfId,
+      isSendingEmail,
     ],
   );
 
@@ -564,7 +741,7 @@ export const InvoiceList: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Main DataGrid - simplified to match products table */}
+      {/* Main DataGrid */}
       <DataGrid
         {...dataGridProps}
         rows={rowsWithNumbers}
@@ -575,8 +752,18 @@ export const InvoiceList: React.FC = () => {
           '& .MuiDataGrid-row': {
             cursor: 'pointer',
           },
+          '& .MuiDataGrid-cell': {
+            color: 'text.primary', // Ensure consistent cell text color
+          },
           '& .MuiDataGrid-cell:focus': {
             outline: 'none',
+          },
+          '& .MuiDataGrid-columnHeaders': {
+            backgroundColor: (theme) => theme.palette.primary.main,
+          },
+          '& .MuiDataGrid-columnHeaderTitle': {
+            color: (theme) => theme.palette.primary.contrastText, // Ensure header text is visible
+            fontWeight: 'bold',
           },
           '&::-webkit-scrollbar': {
             width: '8px',
@@ -589,7 +776,7 @@ export const InvoiceList: React.FC = () => {
         }}
       />
 
-      {/* Separate menu component outside the renderCell function */}
+      {/* Modified menu component with fewer items (moved some to direct actions) */}
       <Menu
         id="actions-menu"
         anchorEl={anchorEl}
@@ -614,21 +801,9 @@ export const InvoiceList: React.FC = () => {
         )}
         <MenuItem onClick={handleShow}>
           <ListItemIcon>
-            <VisibilityIcon fontSize="small" />
+            <VisibilityIcon fontSize="small" color="primary" />
           </ListItemIcon>
-          <ListItemText>View</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={handleSendEmail} disabled={isSendingEmail}>
-          <ListItemIcon>
-            <EmailIcon fontSize="small" color="primary" />
-          </ListItemIcon>
-          <ListItemText>{isSendingEmail ? 'Sending...' : 'Send Email'}</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={handlePaid}>
-          <ListItemIcon>
-            <PaidIcon fontSize="small" color="success" />
-          </ListItemIcon>
-          <ListItemText>Mark As Paid</ListItemText>
+          <ListItemText>View Invoice</ListItemText>
         </MenuItem>
         <MenuItem onClick={handleDebt}>
           <ListItemIcon>
