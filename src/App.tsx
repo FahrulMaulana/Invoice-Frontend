@@ -50,6 +50,7 @@ import { ForgotPassword } from "./pages/forgotPassword";
 import { Login } from "./pages/login";
 import { Register } from "./pages/register";
 import { InvoiceCreate, InvoiceEdit, InvoiceList, InvoiceShow } from "./pages/invoices";
+import { DownloadTemplate, UploadExcel } from "./pages/invoice-generator";
 
 // Buat dataProvider yang menggunakan axiosInstance yang sudah dikonfigurasi
 const customDataProvider = dataProvider("/api", axiosInstance);
@@ -127,6 +128,32 @@ function App() {
                       icon: <i className="material-icons">payments</i>,
                     },
                   },
+                  {
+                    name: "invoice-generator",
+                    meta: {
+                      label: "Invoice Generator",
+                      icon: <i className="material-icons">table_view</i>,
+                    },
+                    list: "/invoice-generator/download-template",
+                  },
+                  {
+                    name: "download-template",
+                    list: "/invoice-generator/download-template",
+                    meta: {
+                      label: "Download Template",
+                      parent: "invoice-generator",
+                      icon: <i className="material-icons">download</i>,
+                    },
+                  },
+                  {
+                    name: "upload-excel",
+                    list: "/invoice-generator/upload-excel",
+                    meta: {
+                      label: "Upload Excel",
+                      parent: "invoice-generator",
+                      icon: <i className="material-icons">upload_file</i>,
+                    },
+                  },
                 ]}
                 options={{
                   syncWithLocation: true,
@@ -193,6 +220,10 @@ function App() {
                       <Route path="create" element={<InvoiceCreate />} />
                       <Route path="edit/:id" element={<InvoiceEdit />} />
                       <Route path="show/:id" element={<InvoiceShow />} />
+                    </Route>
+                    <Route path="/invoice-generator">
+                      <Route path="download-template" element={<DownloadTemplate />} />
+                      <Route path="upload-excel" element={<UploadExcel />} />
                     </Route>
                     <Route path="*" element={<ErrorComponent />} />
                   </Route>

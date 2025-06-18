@@ -391,7 +391,7 @@ export const InvoiceList: React.FC = () => {
           // Create a link element to trigger the download
           const a = document.createElement('a');
           a.href = url;
-          a.download = `Invoice-${row.invoiceNumber || id}.pdf`;
+          a.download = `${row.invoiceNumber || id}.pdf`;
           
           // Append to the document, click it, and then remove it
           document.body.appendChild(a);
@@ -449,7 +449,7 @@ export const InvoiceList: React.FC = () => {
   const columns = React.useMemo<GridColDef[]>(
     () => [
       {
-        field: "no",
+        field: "no",  
         headerName: "No",
         type: "number",
         minWidth: 50,
@@ -548,9 +548,12 @@ export const InvoiceList: React.FC = () => {
                     handlePaid(row);
                   }}
                   size="small"
-                  disabled={row.status === "PAID"}
+                  disabled={row.status === "PAID" || (isMarkingPaid && markingPaidId === row.id)}
                 >
-                  <PaidIcon fontSize="small" />
+                  {isMarkingPaid && markingPaidId === row.id ? 
+                    <CircularProgress size={20} color="success" /> : 
+                    <PaidIcon fontSize="small" />
+                  }
                 </IconButton>
               </Tooltip>
               

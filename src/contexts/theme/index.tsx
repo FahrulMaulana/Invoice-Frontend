@@ -165,6 +165,9 @@ const getComponentOverrides = (mode: PaletteMode) => ({
         root: {
           borderColor: mode === "light" ? "rgba(0, 0, 0, 0.06)" : "rgba(255, 255, 255, 0.06)",
           padding: "12px 16px",
+          verticalAlign: "middle", // Add vertical alignment
+          height: "48px", // Set a consistent height
+          display: "table-cell", // Ensure proper display mode
         },
         head: {
           fontWeight: 600,
@@ -216,6 +219,10 @@ const getComponentOverrides = (mode: PaletteMode) => ({
           },
           "& .MuiDataGrid-columnHeader:focus": {
             outline: "none",
+          },
+          "& .MuiDataGrid-cell": {
+            display: "flex",
+            alignItems: "center", // Vertically center cell content
           },
         },
         columnHeaders: {
