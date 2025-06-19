@@ -186,6 +186,9 @@ export const DownloadTemplate: React.FC = () => {
       title="Download Invoice Template"
       resource="invoice-generator"
       goBack={false}
+      saveButtonProps={{ 
+        sx: { display: 'none' } // Hide the default save button
+      }}
     >
       <Card>
         <CardContent>

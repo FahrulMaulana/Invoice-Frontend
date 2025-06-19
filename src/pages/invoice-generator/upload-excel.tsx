@@ -166,6 +166,9 @@ export const UploadExcel: React.FC = () => {
       title="Upload Excel Template"
       resource="invoice-generator"
       goBack={false}
+      saveButtonProps={{ 
+        sx: { display: 'none' } // Hide the default save button
+      }}
     >
       <Card>
         <CardContent>
