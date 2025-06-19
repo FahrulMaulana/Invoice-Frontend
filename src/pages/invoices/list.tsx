@@ -506,12 +506,15 @@ export const InvoiceList: React.FC = () => {
         minWidth: 120,
         renderCell: function render({ value }) {
           let color: 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
+          let displayValue = value;
+          
           switch (value) {
             case "PAID":
               color = "success";
               break;
-            case "pending":
+            case "BAD_DEBT":
               color = "warning";
+              displayValue = "BAD DEBT";
               break;
             case "canceled":
             case "CANCELED":
@@ -523,9 +526,10 @@ export const InvoiceList: React.FC = () => {
             default:
               color = "default";
           }
+          
           return <Chip 
             color={color} 
-            label={value}
+            label={displayValue}
             sx={{ 
               "& .MuiChip-label": { 
                 color: color === 'default' ? 'text.primary' : undefined 
