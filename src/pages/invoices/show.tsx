@@ -129,12 +129,6 @@ export const InvoiceShow: React.FC = () => {
                 </Typography>
               </Grid>
               <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2">Payment Method</Typography>
-                <Typography variant="body1">
-                  {record?.paymentMethod?.methodName || "N/A"}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} md={6}>
                 <Typography variant="subtitle2">Invoice Date</Typography>
                 <Typography variant="body1">
                   {record?.date ? (
@@ -152,6 +146,12 @@ export const InvoiceShow: React.FC = () => {
                   ) : (
                     "-"
                   )}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Typography variant="subtitle2">Payment Information</Typography>
+                <Typography variant="body1">
+                  {record?.paymentMethod?.info || "N/A"}
                 </Typography>
               </Grid>
             </Grid>
