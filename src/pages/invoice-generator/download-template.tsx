@@ -20,6 +20,7 @@ import {
   CircularProgress,
   OutlinedInput,
   Chip,
+  Divider,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -88,12 +89,13 @@ export const DownloadTemplate: React.FC = () => {
   };
 
   // Handle "Select All" clients
-  const handleSelectAllClients = () => {
+  const handleSelectAllClients = (event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent dropdown from closing
     if (clients?.data) {
-      const allClientIds = clients.data.map((client: any) => client.id);
+      const allClientNames = clients.data.map((client: any) => client.legalName);
       setFormValues({
         ...formValues,
-        clientIds: allClientIds,
+        clientIds: allClientNames,
       });
     }
   };
@@ -110,7 +112,7 @@ export const DownloadTemplate: React.FC = () => {
         paymentMethodId: formValues.paymentMethodId,
         date: dayjs(formValues.creationDate).format("YYYY-MM-DD"),
         due_date: dayjs(formValues.dueDate).format("YYYY-MM-DD"),
-        client: formValues.clientIds.map(id => ({ id }))
+        client: formValues.clientIds.map(clientName => ({ id: clientName }))
       };
 
       // Use fetch API with POST method and proper headers
@@ -271,40 +273,78 @@ export const DownloadTemplate: React.FC = () => {
 
               {/* Clients Multi-Select */}
               <Grid item xs={12} md={6}>
-                <FormControl fullWidth error={formValues.clientIds.length === 0}>
-                  <InputLabel id="clients-select-label">Clients</InputLabel>
-                  <Select
-                    labelId="clients-select-label"
-                    id="clientIds"
-                    multiple
-                    value={formValues.clientIds}
-                    onChange={handleClientChange as any}
-                    input={<OutlinedInput label="Clients" />}
-                    disabled={clientsLoading}
-                    renderValue={(selected) => (
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {(selected as string[]).map((clientId) => {
-                          const client = clients?.data?.find((c: any) => c.id === clientId);
-                          return (
-                            <Chip key={clientId} label={client?.legalName || clientId} />
-                          );
-                        })}
-                      </Box>
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+                  {/* Client dropdown - reduced width */}
+                  <FormControl sx={{ width: '60%' }} error={formValues.clientIds.length === 0}>
+                    <InputLabel id="clients-select-label">Clients</InputLabel>
+                    <Select
+                      labelId="clients-select-label"
+                      id="clientIds"
+                      multiple
+                      value={formValues.clientIds}
+                      onChange={handleClientChange as any}
+                      input={<OutlinedInput label="Clients" />}
+                      disabled={clientsLoading}
+                      renderValue={(selected) => (
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {(selected as string[]).map((clientName) => (
+                            <Chip key={clientName} label={clientName} />
+                          ))}
+                        </Box>
+                      )}
+                      MenuProps={{
+                        PaperProps: {
+                          style: {
+                            maxHeight: 300
+                          }
+                        }
+                      }}
+                    >
+                      {clients?.data?.map((client: any) => (
+                        <MenuItem key={client.id} value={client.legalName}>
+                          {client.legalName}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    {formValues.clientIds.length === 0 && (
+                      <FormHelperText>Required</FormHelperText>
                     )}
+                  </FormControl>
+                  
+                  {/* Select All button - 20% width */}
+                  <Button 
+                    size="medium" 
+                    variant="outlined" 
+                    onClick={() => {
+                      if (clients?.data) {
+                        const allClientNames = clients.data.map((client: any) => client.legalName);
+                        setFormValues({
+                          ...formValues,
+                          clientIds: allClientNames,
+                        });
+                      }
+                    }}
+                    sx={{ width: '20%', height: '56px' }}
                   >
-                    <MenuItem value="select-all" onClick={handleSelectAllClients}>
-                      <em>Select All</em>
-                    </MenuItem>
-                    {clients?.data?.map((client: any) => (
-                      <MenuItem key={client.id} value={client.legalName}>
-                        {client.legalName}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {formValues.clientIds.length === 0 && (
-                    <FormHelperText>Required</FormHelperText>
-                  )}
-                </FormControl>
+                    Select All
+                  </Button>
+                  
+                  {/* Clear button - 20% width */}
+                  <Button 
+                    size="medium" 
+                    variant="outlined" 
+                    color="secondary"
+                    onClick={() => {
+                      setFormValues({
+                        ...formValues,
+                        clientIds: [],
+                      });
+                    }}
+                    sx={{ width: '20%', height: '56px' }}
+                  >
+                    Clear
+                  </Button>
+                </Box>
               </Grid>
 
               {/* Creation Date */}
