@@ -20,7 +20,7 @@ export const PaymentMethodEdit = () => {
   const { id } = useParams();
 
   const { data } = useOne({
-    resource: "payment_methods",
+    resource: "paymentMethod",
     id: id as string,
   });
 

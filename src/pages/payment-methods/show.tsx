@@ -3,7 +3,9 @@ import { Show, TextFieldComponent as TextField } from "@refinedev/mui";
 import { Stack, Typography } from "@mui/material";
 
 export const PaymentMethodShow = () => {
-  const { queryResult } = useShow();
+  const { queryResult } = useShow({
+    resource: "paymentMethod",
+  });
   const { data, isLoading } = queryResult;
 
   const record = data?.data;
