@@ -59,6 +59,7 @@ interface InvoiceFilter {
   paymentMethodId?: string;
   companyId?: string;
   clientId?: string;
+  productId?: string;
 }
 
 export const InvoiceList: React.FC = () => {
@@ -149,6 +150,15 @@ export const InvoiceList: React.FC = () => {
       field: "clientId",
       operator: "eq",
       value: filters.clientId,
+    });
+  }
+  
+  // Add product filter
+  if (filters.productId) {
+    permanentFilters.push({
+      field: "productId",
+      operator: "eq",
+      value: filters.productId,
     });
   }
 
@@ -435,6 +445,11 @@ export const InvoiceList: React.FC = () => {
     queryOptions: {
       enabled: !!dataGridProps?.rows,
     },
+  });
+  
+  // Fetch products data for product filter
+  const { data: productsData, isLoading: productsIsLoading } = useList({
+    resource: "product",
   });
 
   // Create rows with sequential numbering
@@ -724,6 +739,27 @@ export const InvoiceList: React.FC = () => {
                   {clientsData?.data?.map((client: any) => (
                     <MenuItem key={client.id} value={client.id}>
                       {client.legalName}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <FormControl fullWidth size="small">
+                <InputLabel id="product-filter-label">Product</InputLabel>
+                <Select
+                  labelId="product-filter-label"
+                  label="Product"
+                  value={filters.productId || ''}
+                  onChange={(e: SelectChangeEvent) => 
+                    handleFilterChange('productId', e.target.value || null)
+                  }
+                  disabled={productsIsLoading}
+                >
+                  <MenuItem value="">All Products</MenuItem>
+                  {productsData?.data?.map((product: any) => (
+                    <MenuItem key={product.id} value={product.id}>
+                      {product.name}
                     </MenuItem>
                   ))}
                 </Select>
