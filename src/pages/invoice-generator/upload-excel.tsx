@@ -131,7 +131,7 @@ export const UploadExcel: React.FC = () => {
         
         open?.({
           type: "success",
-          message: `Successfully generated ${result.count || 0} invoices`,
+          message: `Successfully generated invoices`,
         });
       } else {
         setUploadResult({
