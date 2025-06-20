@@ -790,24 +790,28 @@ export const InvoiceList: React.FC = () => {
         rows={rowsWithNumbers}
         columns={columns}
         autoHeight
+        getEstimatedRowHeight={() => 100}
+        getRowHeight={() => 'auto'}
         sx={{
           width: '100%',
           '& .MuiDataGrid-row': {
             cursor: 'pointer',
+            maxHeight: 'none !important',
           },
-          // '& .MuiDataGrid-cell': {
-          //   color: 'text.primary', // Ensure consistent cell text color
-          // },
+          '& .MuiDataGrid-cell': {
+            whiteSpace: 'normal !important',
+            wordWrap: 'break-word !important',
+            lineHeight: '1.2em',
+            padding: '8px',
+          },
+          '& .MuiDataGrid-columnHeader': {
+            whiteSpace: 'normal !important',
+            wordWrap: 'break-word !important',
+            lineHeight: '1.2em',
+          },
           '& .MuiDataGrid-cell:focus': {
             outline: 'none',
           },
-          // '& .MuiDataGrid-columnHeaders': {
-          //   backgroundColor: (theme) => theme.palette.primary.main,
-          // },
-          // '& .MuiDataGrid-columnHeaderTitle': {
-          //   color: (theme) => theme.palette.primary.contrastText, // Ensure header text is visible
-          //   fontWeight: 'bold',
-          // },
           '&::-webkit-scrollbar': {
             width: '8px',
             height: '8px',

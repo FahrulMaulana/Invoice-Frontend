@@ -199,6 +199,38 @@ export const CompanyList = () => {
         rows={rowsWithNumbers}
         columns={columns}
         getRowId={getRowId}
+        autoHeight
+        getEstimatedRowHeight={() => 100}
+        getRowHeight={() => 'auto'}
+        sx={{
+          width: '100%',
+          '& .MuiDataGrid-cell': {
+            whiteSpace: 'normal !important',
+            wordWrap: 'break-word !important',
+            lineHeight: '1.2em',
+            padding: '8px',
+          },
+          '& .MuiDataGrid-columnHeader': {
+            whiteSpace: 'normal !important',
+            wordWrap: 'break-word !important',
+            lineHeight: '1.2em',
+          },
+          '& .MuiDataGrid-cell:focus': {
+            outline: 'none',
+          },
+          '&::-webkit-scrollbar': {
+            width: '8px',
+            height: '8px',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: (theme) => theme.palette.grey[300],
+            borderRadius: '4px',
+          },
+          // Pengaturan row height
+          '& .MuiDataGrid-row': {
+            maxHeight: 'none !important',
+          }
+        }}
       />
 
       {/* Separate menu component outside the renderCell function */}
