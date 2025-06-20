@@ -89,7 +89,7 @@ export const PaymentMethodList = () => {
         field: "no",
         headerName: "No",
         type: "number",
-        minWidth: 50,
+        width: 65,
         display: "flex",
         align: "left",
         headerAlign: "left",

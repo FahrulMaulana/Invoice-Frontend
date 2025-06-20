@@ -467,7 +467,7 @@ export const InvoiceList: React.FC = () => {
         field: "no",  
         headerName: "No",
         type: "number",
-        minWidth: 50,
+        width: 65,
         align: "left",
         headerAlign: "left",
         sortable: false,
@@ -476,7 +476,7 @@ export const InvoiceList: React.FC = () => {
         field: "companyId",
         headerName: "Company",
         minWidth: 150,
-        flex: 1,
+        // flex: 1,
         renderCell: function render({ value }) {
           if (companiesIsLoading) {
             return <Typography color="textPrimary">Loading...</Typography>;
