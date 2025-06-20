@@ -32,10 +32,9 @@ import { useParams, useNavigate } from "react-router-dom";
 
 interface InvoiceItem {
   id?: string;
-  invoiceId?: string;
   productId: string;
-  customPrice: number;
   quantity: number;
+  customerPrice: number; // Changed from customPrice to customerPrice to match new DTO
   total?: number;
   product?: {
     id: string;
@@ -71,7 +70,7 @@ interface FormValues {
   date: string;
   dueDate: string;
   notes?: string;
-  items?: InvoiceItem[];
+  products?: InvoiceItem[]; // Changed from items to products to match new DTO
   status?: string;
   subtotal?: number;
 }
@@ -83,7 +82,7 @@ export const InvoiceEdit: React.FC = () => {
   const { mutate } = useUpdate();
   
   const [formValues, setFormValues] = useState<Partial<FormValues>>({});
-  const [items, setItems] = useState<InvoiceItem[]>([]);
+  const [products, setProducts] = useState<InvoiceItem[]>([]); // Changed from items to products
   const [currentProduct, setCurrentProduct] = useState<string>("");
   const [currentQuantity, setCurrentQuantity] = useState<number>(1);
   const [currentPrice, setCurrentPrice] = useState<number | string>("");
@@ -94,11 +93,6 @@ export const InvoiceEdit: React.FC = () => {
     resource: "invoice",
     id: id as string,
   });
-
-  // Log data untuk debugging
-  useEffect(() => {
-
-  }, [invoiceData]);
 
   // Fetch related data
   const { data: companiesData, isLoading: isLoadingCompanies } = useList({
@@ -142,7 +136,16 @@ export const InvoiceEdit: React.FC = () => {
       });
       
       if (invoice.items && Array.isArray(invoice.items)) {
-        setItems(invoice.items);
+        // Convert items to products format
+        const productItems = invoice.items.map(item => ({
+          id: item.id,
+          productId: item.productId,
+          quantity: item.quantity,
+          customerPrice: item.customPrice, // Map customPrice to customerPrice
+          total: item.quantity * item.customPrice,
+          product: item.product
+        }));
+        setProducts(productItems);
       }
     }
   }, [invoiceData]);
@@ -152,11 +155,11 @@ export const InvoiceEdit: React.FC = () => {
       const newItem: InvoiceItem = {
         productId: currentProduct,
         quantity: currentQuantity,
-        customPrice: Number(currentPrice),
+        customerPrice: Number(currentPrice), // Changed from customPrice to customerPrice
         total: currentQuantity * Number(currentPrice)
       };
       
-      // Tambahkan informasi produk jika tersedia
+      // Add product information if available
       const productInfo = productOptions.find(p => p.id === currentProduct);
       if (productInfo) {
         newItem.product = {
@@ -166,7 +169,7 @@ export const InvoiceEdit: React.FC = () => {
         };
       }
       
-      setItems([...items, newItem]);
+      setProducts([...products, newItem]);
       
       // Clear current product form fields
       setCurrentProduct("");
@@ -181,14 +184,14 @@ export const InvoiceEdit: React.FC = () => {
   };
 
   const handleRemoveProduct = (index: number) => {
-    const updatedItems = [...items];
-    updatedItems.splice(index, 1);
-    setItems(updatedItems);
+    const updatedProducts = [...products];
+    updatedProducts.splice(index, 1);
+    setProducts(updatedProducts);
   };
 
   const calculateTotal = () => {
-    return items.reduce((total, item) => {
-      return total + (item.quantity * item.customPrice);
+    return products.reduce((total, item) => {
+      return total + (item.quantity * item.customerPrice);
     }, 0);
   };
 
@@ -228,7 +231,7 @@ export const InvoiceEdit: React.FC = () => {
       setError("Please select a due date");
       return false;
     }
-    if (items.length === 0) {
+    if (products.length === 0) {
       setError("Please add at least one product");
       return false;
     }
@@ -243,26 +246,20 @@ export const InvoiceEdit: React.FC = () => {
       return;
     }
     
-    // Convert dates from string to Date if needed
-    const processedFormValues = {
-      ...formValues,
-      date: formValues.date ? new Date(formValues.date) : new Date(),
-      dueDate: formValues.dueDate ? new Date(formValues.dueDate) : new Date(),
-    };
-    
-    // Calculate subtotal
-    const subtotal = calculateTotal();
-    
+    // Format data according to the new DTO
     const values = {
-      ...processedFormValues,
-      items: items.map(item => ({
+      companyId: formValues.companyId,
+      clientId: formValues.clientId,
+      paymentMethodId: formValues.paymentMethodId,
+      date: formValues.date,
+      dueDate: formValues.dueDate,
+      status: formValues.status,
+      products: products.map(item => ({
+        id: item.id || "",
         productId: item.productId,
-        customPrice: item.customPrice,
         quantity: item.quantity,
-        total: item.quantity * item.customPrice,
-        ...(item.id ? { id: item.id } : {})
+        customerPrice: item.customerPrice,
       })),
-      subtotal,
     };
     
     // Submit data to API using Refine's useUpdate hook
@@ -502,13 +499,13 @@ export const InvoiceEdit: React.FC = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {items.map((item, index) => (
+                      {products.map((item, index) => (
                         <TableRow key={index}>
                           <TableCell>{item.product?.name || getProductName(item.productId)}</TableCell>
                           <TableCell align="right">{item.quantity}</TableCell>
-                          <TableCell align="right">${item.customPrice.toFixed(2)}</TableCell>
+                          <TableCell align="right">${item.customerPrice.toFixed(2)}</TableCell>
                           <TableCell align="right">
-                            ${(item.quantity * item.customPrice).toFixed(2)}
+                            ${(item.quantity * item.customerPrice).toFixed(2)}
                           </TableCell>
                           <TableCell align="center">
                             <IconButton
@@ -521,7 +518,7 @@ export const InvoiceEdit: React.FC = () => {
                           </TableCell>
                         </TableRow>
                       ))}
-                      {items.length === 0 && (
+                      {products.length === 0 && (
                         <TableRow>
                           <TableCell colSpan={5} align="center">
                             No products added yet
